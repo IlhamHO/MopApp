@@ -6,6 +6,8 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Filter;
+import android.widget.Filterable;
 import android.widget.TextView;
 
 import java.util.ArrayList;
@@ -13,7 +15,8 @@ import java.util.ArrayList;
 import be.ehb.mopapp.R;
 import be.ehb.mopapp.model.Mop;
 
-public class MopAdapter extends RecyclerView.Adapter<MopAdapter.MopViewHolder> {
+public class MopAdapter extends RecyclerView.Adapter<MopAdapter.MopViewHolder> implements Filterable {
+
 
     //viewholder pettern
     //klasse die verwijzingen bijhoud naar elementen in layout
@@ -31,10 +34,13 @@ public class MopAdapter extends RecyclerView.Adapter<MopAdapter.MopViewHolder> {
         }
     }
 
-    private ArrayList<Mop> items;
+    private ArrayList<Mop> items, filteredItems;
+
+
 
     public MopAdapter(ArrayList<Mop> items) {
         this.items = items;
+        this.filteredItems = items;
     }
 
 //hoe ziet de rij eruit?
@@ -50,14 +56,58 @@ public class MopAdapter extends RecyclerView.Adapter<MopAdapter.MopViewHolder> {
     }
 //rijen opvullen
     @Override
-    public void onBindViewHolder(@NonNull MopViewHolder mopViewHolder, int position) {
-        Mop mopVoorDeRij = items.get(position);
+    public void onBindViewHolder(@NonNull MopViewHolder mopViewHolder, int i) {
+        Mop mopVoorDeRij = filteredItems.get(i);
+
         mopViewHolder.tvMop.setText( mopVoorDeRij.getMop());
         mopViewHolder.tvClou.setText(mopVoorDeRij.getClou());
     }
 // hoeveel rijen tekenen?
     @Override
     public int getItemCount() {
-        return items.size();
+
+        return filteredItems.size();
     }
+    @Override
+    public Filter getFilter() {
+
+        Filter filter = new Filter() {
+            //door de data gaan en enkelen items uit de lijst filteren
+            //resultatenset opbouwen
+            @Override
+            protected FilterResults performFiltering(CharSequence constraint) {
+                String zoekterm = constraint.toString();
+
+                ArrayList<Mop> tempList = new ArrayList<>();
+
+                //is er niets getypt, toon alles
+
+                if(zoekterm.isEmpty()){
+                    tempList = items;
+                }else{
+                    //is er iets getypt, overloop alle items en kijk na of zoekterm in moppen voorkomen
+
+                    for(Mop m : items){
+                        if(m.getMop().contains(zoekterm) || m.getClou().contains(zoekterm)){
+                            //geldig, toevoegen aan lijst
+                            tempList.add(m);
+                        }
+                    }
+                }
+                FilterResults filterResults = new FilterResults();
+                filterResults.values = tempList;
+                return  filterResults;
+            }
+            //resultaten komt binnen,gebruiken om Lijst te updaten met wat overblijft na het filteren
+            @Override
+            protected void publishResults(CharSequence constraint, FilterResults results) {
+                filteredItems = (ArrayList<Mop>) results.values;
+                notifyDataSetChanged();
+
+            }
+        };
+        return filter;
+    }
+
+
 }

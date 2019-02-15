@@ -9,6 +9,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.SearchView;
 
 import be.ehb.mopapp.model.MopDao;
 import be.ehb.mopapp.recyclerutilities.MopAdapter;
@@ -18,11 +19,29 @@ public class MainActivity extends AppCompatActivity {
 
     private RecyclerView rvMopjes;
     private MopAdapter adapter;
+    private SearchView.OnQueryTextListener searchListener = new SearchView.OnQueryTextListener() {
+        //op enter gedrukt
+        @Override
+        public boolean onQueryTextSubmit(String query) {
+            adapter.getFilter().filter(query);
+            return false;
+        }
+//als een karakter is getypt || verwijderd
+        @Override
+        public boolean onQueryTextChange(String newText) {
+            adapter.getFilter().filter(newText);
+            return false;
+        }
+    };
 
 //menu opbouwen
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.hoofd_menu,menu);
+        //searchview halen van mijn menu
+        SearchView searchView = (SearchView) menu.findItem(R.id.mi_search).getActionView();
+        searchView.setOnQueryTextListener(searchListener);
+
         return super.onCreateOptionsMenu(menu);
     }
 
@@ -65,13 +84,7 @@ public class MainActivity extends AppCompatActivity {
             }
         }));
     }
-    @Override
-        protected void onResume(){
-    super.onResume();
-    //adapter te updaten
-        adapter = new MopAdapter(MopDao.getInstance().getMopLijst());
-        adapter.notifyDataSetChanged();
-        }
+
 
     }
 
